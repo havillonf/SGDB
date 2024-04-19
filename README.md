@@ -1,0 +1,2 @@
+# SGDB
+Repositório para a cadeira CK0117 - SISTEMAS DE GERENCIAMENTO DE BANCOS DE DADOS
