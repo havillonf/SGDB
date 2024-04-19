@@ -1,0 +1,48 @@
+# Arquivos do IntelliJ
+.idea/
+
+# Arquivos de log
+log/
+logs/
+*.log
+
+# Arquivos temporários
+tmp/
+*.tmp
+*.bak
+*.s
+*~.nib
+local.properties
+.recommenders/
+
+# Arquivos de classe Java
+*.class
+
+# Arquivos de pacote
+*.jar
+*.war
+*.ear
+*.zip
+*.tar.gz
+*.rar
+
+# Arquivos de diretório de destino
+target/
+
+# Arquivos do Maven
+pom.xml.tag
+pom.xml.releaseBackup
+pom.xml.versionsBackup
+pom.xml.next
+release.properties
+dependency-reduced-pom.xml
+buildNumber.properties
+.mvn/timing.properties
+
+# Arquivos do Spring Boot
+.springBeans
+
+# Arquivos de teste de unidade
+*.failsafe
+surefire-reports
+test-output/
