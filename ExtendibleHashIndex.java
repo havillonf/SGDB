@@ -1,3 +1,4 @@
+import java.io.IOException;
 import java.io.PrintWriter;
 import java.util.ArrayList;
 import java.util.List;
@@ -8,9 +9,9 @@ class ExtendibleHashIndex {
 
     public ExtendibleHashIndex(int depth) {
         this.globalDepth = depth;
-        this.directory = new ArrayList<>(1 << depth); // Initialize with the correct size
+        this.directory = new ArrayList<>(1 << depth);
         for (int i = 0; i < (1 << depth); i++) {
-            this.directory.add(new HashBucket(depth));
+            this.directory.add(new HashBucket(depth, i));
         }
     }
 
@@ -18,7 +19,7 @@ class ExtendibleHashIndex {
         return year & ((1 << globalDepth) - 1);
     }
 
-    public void insert(Record record, PrintWriter output) {
+    public void insert(Record record, PrintWriter output) throws IOException {
         int index = hash(record.year);
         HashBucket bucket = directory.get(index);
 
@@ -30,24 +31,17 @@ class ExtendibleHashIndex {
         }
     }
 
-    public void search(int year, PrintWriter output) {
+    public void search(int year, PrintWriter output) throws IOException {
         int index = hash(year);
         HashBucket bucket = directory.get(index);
-        int count = 0;
-        for (Record record : bucket.records) {
-            if (record.year == year) {
-                count++;
-            }
-        }
+        int count = bucket.search(year);
         output.println("BUS:" + year + "/" + count);
     }
 
-    public void delete(int year, PrintWriter output) {
+    public void delete(int year, PrintWriter output) throws IOException {
         int index = hash(year);
         HashBucket bucket = directory.get(index);
-        int initialSize = bucket.records.size();
-        bucket.records.removeIf(record -> record.year == year);
-        int removed = initialSize - bucket.records.size();
+        int removed = bucket.delete(year);
         output.println("REM:" + year + "/" + removed + "," + globalDepth + "," + bucket.localDepth);
     }
 }

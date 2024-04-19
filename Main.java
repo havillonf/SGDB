@@ -10,7 +10,10 @@ public class Main {
         // Read initial global depth from the first line
         String firstLine = scanner.nextLine();
         int globalDepth = Integer.parseInt(firstLine.split("/")[1]);
-        ExtendibleHashIndex ehi = new ExtendibleHashIndex(globalDepth); // Use the depth from the file
+        ExtendibleHashIndex ehi = new ExtendibleHashIndex(globalDepth);
+
+        // Load data from CSV file before processing commands
+        loadComprasCsv(ehi, "compras.csv");
 
         output.println(firstLine); // Echo the first line to out.txt
 
@@ -22,7 +25,7 @@ public class Main {
 
             switch (command) {
                 case "INC":
-                    ehi.insert(new Record(key, 0.0), output); // Assuming dummy value
+                    ehi.insert(new Record(key, 0.0), output);
                     break;
                 case "REM":
                     ehi.delete(key, output);
@@ -32,20 +35,22 @@ public class Main {
                     break;
             }
         }
-        output.println("P:/" + ehi.globalDepth);
+
         output.close();
         scanner.close();
     }
 
-    private static void loadComprasCsv(ExtendibleHashIndex ehi, String fileName) throws FileNotFoundException {
-        Scanner csvScanner = new Scanner(new File(fileName));
-        while (csvScanner.hasNextLine()) {
-            String line = csvScanner.nextLine();
-            String[] parts = line.split(",");
-            int year = Integer.parseInt(parts[2].trim()); // Year is the third column
-            double value = Double.parseDouble(parts[1].trim()); // Value is the second column
-            ehi.insert(new Record(year, value), new PrintWriter(System.out)); // Output to System.out for initial load
+    private static void loadComprasCsv(ExtendibleHashIndex ehi, String fileName) throws IOException {
+        try (BufferedReader br = new BufferedReader(new FileReader(fileName))) {
+            String line;
+            while ((line = br.readLine()) != null) {
+                String[] parts = line.split(",");
+                int year = Integer.parseInt(parts[2].trim());
+                double value = Double.parseDouble(parts[1].trim());
+                PrintWriter dummyOutput = new PrintWriter(System.out); // Dummy output for loading
+                ehi.insert(new Record(year, value), dummyOutput);
+                dummyOutput.close();
+            }
         }
-        csvScanner.close();
     }
 }
