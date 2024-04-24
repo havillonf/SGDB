@@ -33,6 +33,7 @@ class ExtendibleHashIndex {
 
     public void search(int year, PrintWriter output) throws IOException {
         int index = hash(year);
+        System.out.println("Resultado da função hash: " + index);
         HashBucket bucket = directory.get(index);
         int count = bucket.search(year);
         output.println("BUS:" + year + "/" + count);

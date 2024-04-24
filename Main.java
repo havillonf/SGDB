@@ -21,17 +21,17 @@ public class Main {
             String line = scanner.nextLine();
             String[] parts = line.split(":");
             String command = parts[0];
-            int key = Integer.parseInt(parts[1]);
+            int year = Integer.parseInt(parts[1]);
 
             switch (command) {
                 case "INC":
-                    ehi.insert(new Record(key, 0.0), output);
+                    ehi.insert(new Record(0, year), output);
                     break;
                 case "REM":
-                    ehi.delete(key, output);
+                    ehi.delete(year, output);
                     break;
-                case "BUS":
-                    ehi.search(key, output);
+                case "BUS=":
+                    ehi.search(year, output);
                     break;
             }
         }
@@ -45,12 +45,25 @@ public class Main {
             String line;
             while ((line = br.readLine()) != null) {
                 String[] parts = line.split(",");
+                int index = Integer.parseInt(parts[0].trim());
                 int year = Integer.parseInt(parts[2].trim());
-                double value = Double.parseDouble(parts[1].trim());
-                PrintWriter dummyOutput = new PrintWriter(System.out); // Dummy output for loading
-                ehi.insert(new Record(year, value), dummyOutput);
-                dummyOutput.close();
+                PrintWriter unusedOutput = new PrintWriter(System.out); // Dummy output for loading
+                ehi.insert(new Record(index, year), unusedOutput);
+                unusedOutput.close();
             }
         }
+    }
+
+    public static String lastBits(int n, int depth){
+        int lastDigits = n & (1 << depth) - 1; // Aplica a máscara ao número
+
+        StringBuilder binary = new StringBuilder(Integer.toBinaryString(lastDigits));
+
+        while (binary.length() < depth) {
+            binary.insert(0, "0");
+        }
+        System.out.println("Últimos " + depth + " dígitos binários: " + binary);
+
+        return binary.toString();
     }
 }

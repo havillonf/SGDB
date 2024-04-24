@@ -9,12 +9,13 @@ class HashBucket {
 
     public HashBucket(int depth, int bucketId) {
         this.localDepth = depth;
-        this.bucketFile = new File("bucket" + bucketId + ".txt");
+        String bits = Main.lastBits(bucketId, depth);
+        this.bucketFile = new File("buckets/" + bits + ".txt");
     }
 
     public boolean isFull() throws IOException {
         if (!bucketFile.exists()) {
-            return false; // If the file does not exist, it's not full because it has no entries.
+            return false;
         }
         try (BufferedReader br = new BufferedReader(new FileReader(bucketFile))) {
             int count = 0;
@@ -85,8 +86,8 @@ class HashBucket {
 
     private Record parseRecord(String line) {
         String[] parts = line.split(",");
-        int year = Integer.parseInt(parts[0]);
-        double value = Double.parseDouble(parts[1]);
-        return new Record(year, value);
+        int index = Integer.parseInt(parts[0]);
+        int year = Integer.parseInt(parts[1]);
+        return new Record(index, year);
     }
 }

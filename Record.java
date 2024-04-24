@@ -1,14 +1,14 @@
 class Record {
+    int index;
     int year;
-    double value;
 
-    public Record(int year, double value) {
+    public Record(int index, int year) {
+        this.index = index;
         this.year = year;
-        this.value = value;
     }
 
     @Override
     public String toString() {
-        return year + "," + value;
+        return index + "," + year;
     }
 }
