@@ -35,6 +35,7 @@ public class Main {
                     break;
             }
         }
+        output.println("P:" + ehi.globalDepth);
 
         output.close();
         scanner.close();
