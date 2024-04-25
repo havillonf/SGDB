@@ -12,9 +12,6 @@ public class Main {
         int globalDepth = Integer.parseInt(firstLine.split("/")[1]);
         ExtendibleHashIndex ehi = new ExtendibleHashIndex(globalDepth);
 
-        // Load data from CSV file before processing commands
-        loadComprasCsv(ehi, "compras.csv");
-
         output.println(firstLine); // Echo the first line to out.txt
 
         while (scanner.hasNextLine()) {
@@ -25,7 +22,10 @@ public class Main {
 
             switch (command) {
                 case "INC":
-                    ehi.insert(new Record(0, year), output);
+                    List<Integer> indexes = getIndexesFromYear(year);
+                    for (Integer index : indexes) {
+                        ehi.insert(new Record(index, year), output);
+                    }
                     break;
                 case "REM":
                     ehi.delete(year, output);
@@ -41,30 +41,32 @@ public class Main {
         scanner.close();
     }
 
-    private static void loadComprasCsv(ExtendibleHashIndex ehi, String fileName) throws IOException {
-        try (BufferedReader br = new BufferedReader(new FileReader(fileName))) {
+    private static void createBuckets(int globalDepth) {
+
+    }
+
+    private static List<Integer> getIndexesFromYear(int inputYear){
+        List<Integer> indexes = new ArrayList<>();
+        //Reader is automatically closed by Try-With-Resources
+        try (BufferedReader br = new BufferedReader(new FileReader("compras.csv"))) {
             String line;
             while ((line = br.readLine()) != null) {
                 String[] parts = line.split(",");
                 int index = Integer.parseInt(parts[0].trim());
                 int year = Integer.parseInt(parts[2].trim());
-                PrintWriter unusedOutput = new PrintWriter(System.out); // Dummy output for loading
-                ehi.insert(new Record(index, year), unusedOutput);
-                unusedOutput.close();
+                if(year == inputYear){
+                    indexes.add(index);
+                }
             }
+        } catch (Exception e) {
+            throw new RuntimeException(e);
         }
+        return indexes;
     }
 
     public static String lastBits(int n, int depth){
-        int lastDigits = n & (1 << depth) - 1; // Aplica a máscara ao número
+        int lastDigits = n & (1 << depth) - 1;
 
-        StringBuilder binary = new StringBuilder(Integer.toBinaryString(lastDigits));
-
-        while (binary.length() < depth) {
-            binary.insert(0, "0");
-        }
-        System.out.println("Últimos " + depth + " dígitos binários: " + binary);
-
-        return binary.toString();
+        return Integer.toBinaryString(lastDigits);
     }
 }

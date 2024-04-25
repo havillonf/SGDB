@@ -7,10 +7,11 @@ class HashBucket {
     int localDepth;
     int maxEntries = 3;
 
-    public HashBucket(int depth, int bucketId) {
+    public HashBucket(int depth, int bucketId) throws IOException {
         this.localDepth = depth;
         String bits = Main.lastBits(bucketId, depth);
         this.bucketFile = new File("buckets/" + bits + ".txt");
+        bucketFile.createNewFile();
     }
 
     public boolean isFull() throws IOException {
@@ -89,5 +90,11 @@ class HashBucket {
         int index = Integer.parseInt(parts[0]);
         int year = Integer.parseInt(parts[1]);
         return new Record(index, year);
+    }
+
+    public void clear() throws IOException {
+        if (bucketFile.exists()) {
+            new PrintWriter(bucketFile).close(); // Clears the file by reopening and closing it without appending.
+        }
     }
 }
