@@ -1,0 +1,17 @@
+PG:4
+Index: 0, PL: 2
+Index: 1, PL: 3
+Index: 10, PL: 2
+Index: 11, PL: 2
+Index: 100, PL: 3
+Index: 101, PL: 4
+Index: 110, PL: 3
+Index: 111, PL: 3
+Index: 1000, PL: 4
+Index: 1001, PL: 4
+Index: 1010, PL: 4
+Index: 1011, PL: 4
+Index: 1100, PL: 4
+Index: 1101, PL: 4
+Index: 1110, PL: 4
+Index: 1111, PL: 4

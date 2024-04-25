@@ -95,4 +95,14 @@ class ExtendibleHashIndex {
         int removed = bucket.delete(year);
         output.println("REM:" + year + "/" + removed + "," + globalDepth + "," + bucket.localDepth);
     }
+
+    public void printDirectory() throws FileNotFoundException {
+        PrintWriter output = new PrintWriter("files/directory.txt");
+        output.println("PG:" + globalDepth);
+        for (int i = 0; i < directory.size(); i++) {
+            String index = directory.get(i).bucketFile.getName().split("\\.")[0];
+            output.println("Bucket: (" + i + ") Index: " + index + ", " + "PL: " + directory.get(i).localDepth);
+        }
+        output.close();
+    }
 }

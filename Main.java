@@ -3,9 +3,9 @@ import java.util.*;
 
 public class Main {
     public static void main(String[] args) throws IOException {
-        File inputFile = new File("in.txt");
+        File inputFile = new File("files/in.txt");
         Scanner scanner = new Scanner(inputFile);
-        PrintWriter output = new PrintWriter("out.txt");
+        PrintWriter output = new PrintWriter("files/out.txt");
 
         // Read initial global depth from the first line
         String firstLine = scanner.nextLine();
@@ -36,7 +36,7 @@ public class Main {
             }
         }
         output.println("P:" + ehi.globalDepth);
-
+        ehi.printDirectory();
         output.close();
         scanner.close();
     }
@@ -48,7 +48,7 @@ public class Main {
     private static List<Integer> getIndexesFromYear(int inputYear){
         List<Integer> indexes = new ArrayList<>();
         //Reader is automatically closed by Try-With-Resources
-        try (BufferedReader br = new BufferedReader(new FileReader("compras.csv"))) {
+        try (BufferedReader br = new BufferedReader(new FileReader("files/compras.csv"))) {
             String line;
             while ((line = br.readLine()) != null) {
                 String[] parts = line.split(",");
