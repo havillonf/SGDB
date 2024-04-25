@@ -85,7 +85,56 @@ class ExtendibleHashIndex {
         HashBucket bucket = directory.get(index);
         int removed = bucket.delete(year);
         output.println("REM:" + year + "/" + removed + "," + globalDepth + "," + bucket.localDepth);
+        if(HashBucket.readRecordsFromFile("buckets/" + bucket.bucketFile.getName()).isEmpty()){
+            int bucketIndex = directory.indexOf(bucket);
+            mergeBuckets(bucketIndex);
+        }
     }
+    
+    public void mergeBuckets(int emptyBucketIndex) throws IOException {
+        // Encontrar o índice do bucket irmão
+        int mirrorIndex = emptyBucketIndex ^ (1 << (directory.get(emptyBucketIndex).localDepth - 1));
+        HashBucket emptyBucket = directory.get(emptyBucketIndex);
+        HashBucket mirrorBucket = directory.get(mirrorIndex);
+
+        // Verificar se o merge é possível
+        if (emptyBucket.localDepth == mirrorBucket.localDepth && !mirrorBucket.isFull()) {
+            // Mover todos os registros do bucket irmão para o bucket vazio
+            List<Record> mirrorRecords = HashBucket.readRecordsFromFile("buckets/" + mirrorBucket.bucketFile.getName());
+            for (Record record : mirrorRecords) {
+                emptyBucket.insertRecord(record);
+            }
+            mirrorBucket.clear();
+
+            // Atualizar o diretório para apontar para o bucket combinado
+            int combinedLocalDepth = emptyBucket.localDepth - 1;
+            for (int i = 0; i < directory.size(); i++) {
+                if ((i & ((1 << combinedLocalDepth) - 1)) == (emptyBucketIndex & ((1 << combinedLocalDepth) - 1))) {
+                    directory.set(i, emptyBucket);
+                }
+            }
+
+            // Atualizar a profundidade local dos buckets combinados
+            emptyBucket.localDepth = combinedLocalDepth;
+
+            // Verificar se a profundidade global pode ser reduzida
+            boolean canReduceGlobalDepth = true;
+            for (HashBucket bucket : directory) {
+                if (bucket.localDepth == globalDepth) {
+                    canReduceGlobalDepth = false;
+                    break;
+                }
+            }
+            if (canReduceGlobalDepth) {
+                globalDepth--;
+                // Reduzir o tamanho do diretório pela metade
+                for (int i = 0; i < directory.size() / 2; i++) {
+                    directory.remove(directory.size() - 1);
+                }
+            }
+        }
+    }
+
 
     public void printDirectory() throws FileNotFoundException {
         PrintWriter output = new PrintWriter("files/directory.txt");
