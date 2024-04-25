@@ -19,8 +19,8 @@ class ExtendibleHashIndex {
     }
 
     public void insert(Record record, PrintWriter output) throws IOException {
-        System.out.println("Inserting " + record.year);
         int index = hash(record.year);
+        System.out.println("Inserting " + record.year + " with index " + index);
         HashBucket bucket = directory.get(index);
 
         if (bucket.isFull()) {
@@ -34,52 +34,43 @@ class ExtendibleHashIndex {
         }
     }
 
-    private void splitBucket(int index) throws IOException {
+    public void splitBucket(int index) throws IOException {
         HashBucket oldBucket = directory.get(index);
 
-        if(oldBucket.isFull()) {
+        if (oldBucket.isFull()) {
+            // Atualizar o diretório
             int currentSize = directory.size();
             for (int i = 0; i < currentSize; i++) {
-                //add the new duplicate
-                HashBucket newBucket = new HashBucket(oldBucket.localDepth + 1, (int) (i + Math.pow(2, globalDepth)));
-                directory.add(newBucket);
+                directory.add(directory.get(i));
             }
             globalDepth++;
-        }
 
-        int newLocalDepth = oldBucket.localDepth + 1;
-        HashBucket newBucket = directory.get((int) (index + Math.pow(2, globalDepth-1)));
+            // Criar um novo bucket com profundidade local aumentada
+            int newBucketNumber = index + (int) Math.pow(2, globalDepth - 1);
+            HashBucket newBucket = new HashBucket(oldBucket.localDepth + 1, newBucketNumber);
+            directory.set(newBucketNumber, newBucket);
 
-        // Create a temporary list to hold records while we clear the old bucket
-        File tempFile = new File("temp_records.txt");
-        try (BufferedReader reader = new BufferedReader(new FileReader(oldBucket.bucketFile));
-             PrintWriter writer = new PrintWriter(new FileWriter(tempFile))) {
-            String line;
-            while ((line = reader.readLine()) != null) {
-                writer.println(line); // Write to temp file
-            }
-        }
-        oldBucket.clear();
+            // Rehash dos registros
+            List<Record> tempRecords = HashBucket.readRecordsFromFile("buckets/" + oldBucket.bucketFile.getName());
+            oldBucket.clear();
+            newBucket.clear();
 
-        try (BufferedReader tempReader = new BufferedReader(new FileReader(tempFile))) {
-            String line;
-            while ((line = tempReader.readLine()) != null) {
-                String[] parts = line.split(",");
-                int idx = Integer.parseInt(parts[0]);
-                int year = Integer.parseInt(parts[1]);
-                Record record = new Record(idx, year);
+            for (Record record : tempRecords) {
                 int newIndex = hash(record.year);
-                if (newIndex == index) {
+                if ((newIndex & ((1 << globalDepth) - 1)) == index) {
+                    System.out.println("Reinserting year " + record.year + " on the old bucket");
                     oldBucket.insertRecord(record);
                 } else {
+                    System.out.println("Reinserting year " + record.year + " on the new bucket");
                     newBucket.insertRecord(record);
                 }
+                System.out.println();
             }
+
+            // Atualizar a profundidade local dos buckets
+            oldBucket.localDepth = oldBucket.localDepth + 1;
+            newBucket.localDepth = oldBucket.localDepth;
         }
-
-        tempFile.delete(); // Cleanup the temporary file
-
-        oldBucket.localDepth = newLocalDepth; // Update the local depth of the old bucket
     }
 
     public void search(int year, PrintWriter output) throws IOException {

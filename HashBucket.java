@@ -85,11 +85,27 @@ class HashBucket {
         return removedCount;
     }
 
-    private Record parseRecord(String line) {
+    public static Record parseRecord(String line) {
         String[] parts = line.split(",");
         int index = Integer.parseInt(parts[0]);
         int year = Integer.parseInt(parts[1]);
         return new Record(index, year);
+    }
+
+    public static List<Record> readRecordsFromFile(String fileName) {
+        List<Record> records = new ArrayList<>();
+        File file = new File(fileName);
+
+        try (BufferedReader reader = new BufferedReader(new FileReader(file))) {
+            String line;
+            while ((line = reader.readLine()) != null) {
+                records.add(parseRecord(line));
+            }
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+
+        return records;
     }
 
     public void clear() throws IOException {
