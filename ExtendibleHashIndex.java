@@ -87,6 +87,7 @@ class ExtendibleHashIndex {
         if(bucket.isEmpty()){
             int bucketIndex = directory.indexOf(bucket);
             HashBucket finalBucket = mergeBuckets(bucketIndex);
+            System.out.println("finalBucket: " + finalBucket.bucketFile.getName());
             output.println("REM:" + year + "/" + removed + "," + globalDepth + "," + finalBucket.localDepth);
         }else{
             output.println("REM:" + year + "/" + removed + "," + globalDepth + "," + bucket.localDepth);
@@ -96,6 +97,7 @@ class ExtendibleHashIndex {
     public HashBucket mergeBuckets(int index) throws IOException {
         System.out.println("Entrou na função MergeBuckets o indice:" + index);
         if(globalDepth == 2){
+            System.out.println(directory.get(index).bucketFile.getName());
             return directory.get(index);
         }
         // Encontrar o índice do bucket espelho
@@ -121,14 +123,12 @@ class ExtendibleHashIndex {
         }else{
             return lowerIndexBucket;
         }
-
         if(isSiblingLowerIndex){
             mergeBuckets(siblingIndex);
         }else{
             mergeBuckets(index);
         }
-
-        return lowerIndexBucket;
+        return bucket;
     }
 
     public void moveRecords(HashBucket emptyBucket, HashBucket bucket) throws IOException {
