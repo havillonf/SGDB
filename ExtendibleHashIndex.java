@@ -84,56 +84,129 @@ class ExtendibleHashIndex {
         int index = hash(year);
         HashBucket bucket = directory.get(index);
         int removed = bucket.delete(year);
-        output.println("REM:" + year + "/" + removed + "," + globalDepth + "," + bucket.localDepth);
-        if(HashBucket.readRecordsFromFile("buckets/" + bucket.bucketFile.getName()).isEmpty()){
+        if(bucket.isEmpty()){
             int bucketIndex = directory.indexOf(bucket);
-            mergeBuckets(bucketIndex);
+            HashBucket finalBucket = mergeBuckets(bucketIndex);
+            output.println("REM:" + year + "/" + removed + "," + globalDepth + "," + finalBucket.localDepth);
+        }else{
+            output.println("REM:" + year + "/" + removed + "," + globalDepth + "," + bucket.localDepth);
         }
     }
     
-    public void mergeBuckets(int emptyBucketIndex) throws IOException {
-        // Encontrar o índice do bucket irmão
-        int mirrorIndex = emptyBucketIndex ^ (1 << (directory.get(emptyBucketIndex).localDepth - 1));
-        HashBucket emptyBucket = directory.get(emptyBucketIndex);
-        HashBucket mirrorBucket = directory.get(mirrorIndex);
+    public HashBucket mergeBuckets(int index) throws IOException {
+        System.out.println("Entrou na função MergeBuckets o indice:" + index);
+        if(globalDepth == 2){
+            return directory.get(index);
+        }
+        // Encontrar o índice do bucket espelho
+        HashBucket bucket = directory.get(index);
 
-        // Verificar se o merge é possível
-        if (emptyBucket.localDepth == mirrorBucket.localDepth && !mirrorBucket.isFull()) {
-            // Mover todos os registros do bucket irmão para o bucket vazio
-            List<Record> mirrorRecords = HashBucket.readRecordsFromFile("buckets/" + mirrorBucket.bucketFile.getName());
-            for (Record record : mirrorRecords) {
-                emptyBucket.insertRecord(record);
-            }
-            mirrorBucket.clear();
+        int siblingIndex = index ^ (1 << (bucket.localDepth - 1));
+        System.out.println("siblingIndex:" + siblingIndex);
+        boolean isSiblingLowerIndex = siblingIndex < index;
 
-            // Atualizar o diretório para apontar para o bucket combinado
-            int combinedLocalDepth = emptyBucket.localDepth - 1;
-            for (int i = 0; i < directory.size(); i++) {
-                if ((i & ((1 << combinedLocalDepth) - 1)) == (emptyBucketIndex & ((1 << combinedLocalDepth) - 1))) {
-                    directory.set(i, emptyBucket);
-                }
-            }
+        HashBucket lowerIndexBucket = isSiblingLowerIndex ? directory.get(siblingIndex) : directory.get(index);
+        HashBucket higherIndexBucket = isSiblingLowerIndex ? directory.get(index) : directory.get(siblingIndex);
 
-            // Atualizar a profundidade local dos buckets combinados
-            emptyBucket.localDepth = combinedLocalDepth;
+        System.out.println("lower: " + lowerIndexBucket.bucketFile.getName());
+        System.out.println("higher: " + higherIndexBucket.bucketFile.getName());
 
-            // Verificar se a profundidade global pode ser reduzida
-            boolean canReduceGlobalDepth = true;
-            for (HashBucket bucket : directory) {
-                if (bucket.localDepth == globalDepth) {
-                    canReduceGlobalDepth = false;
-                    break;
-                }
-            }
-            if (canReduceGlobalDepth) {
-                globalDepth--;
-                // Reduzir o tamanho do diretório pela metade
-                for (int i = 0; i < directory.size() / 2; i++) {
-                    directory.remove(directory.size() - 1);
-                }
+        if(lowerIndexBucket.isEmpty()){
+            System.out.println("lower ficou vazio");
+            moveRecords(lowerIndexBucket, higherIndexBucket);
+            merge(higherIndexBucket, lowerIndexBucket);
+        }else if(higherIndexBucket.isEmpty()){
+            System.out.println("higher ficou vazio");
+            merge(higherIndexBucket, lowerIndexBucket);
+        }else{
+            return lowerIndexBucket;
+        }
+
+        if(isSiblingLowerIndex){
+            mergeBuckets(siblingIndex);
+        }else{
+            mergeBuckets(index);
+        }
+
+        return lowerIndexBucket;
+    }
+
+    public void moveRecords(HashBucket emptyBucket, HashBucket bucket) throws IOException {
+        System.out.println("Moveu os registros de ("+bucket.bucketFile.getName()+")" + " para ("+emptyBucket.bucketFile.getName()+")");
+        List<Record> siblingRecords = HashBucket.readRecordsFromFile("buckets/" + bucket.bucketFile.getName());
+        for (Record record : siblingRecords) {
+            System.out.println("Registro: " + record.year);
+            emptyBucket.insertRecord(record);
+        }
+        bucket.clear();
+    }
+
+    public void merge(HashBucket emptyBucket, HashBucket bucket) throws IOException {
+        System.out.println("Entrou pra fazer o merge");
+        System.out.println("Empty bucket: " + emptyBucket.bucketFile.getName() + " index: " + directory.indexOf(emptyBucket));
+        System.out.println("Bucket: " + bucket.bucketFile.getName() + " index: " + directory.indexOf(bucket));
+
+        int lowerIndexBucketNumber = Math.min(directory.indexOf(emptyBucket), directory.indexOf(bucket));
+        int higherIndexBucketNumber = Math.max(directory.indexOf(emptyBucket), directory.indexOf(bucket));
+
+        // Excluir o arquivo do bucket irmão
+        File higherIndexFile = new File("buckets/" + directory.get(higherIndexBucketNumber).bucketFile.getName());
+        System.out.println("Apagando o arquivo: " + directory.get(higherIndexBucketNumber).bucketFile.getName());
+        if (higherIndexFile.exists()) {
+            higherIndexFile.delete();
+        }
+
+        // Atualizar o diretório para apontar para o bucket de menor índice
+        int combinedLocalDepth = emptyBucket.localDepth - 1;
+        int mask = (1 << combinedLocalDepth) - 1;
+
+        for (int i = 0; i < directory.size(); i++) {
+            if ((i & mask) == (lowerIndexBucketNumber & mask)) {
+                directory.set(i, directory.get(lowerIndexBucketNumber));
             }
         }
+
+        System.out.println();
+        for(int i = 0; i < directory.size(); i++) {
+            if(directory.get(i) != null){
+                System.out.println("directory at: " + i + " - " + directory.get(i).bucketFile.getName());
+            }
+        }
+        System.out.println();
+
+        // Atualizar a profundidade local do bucket original
+        emptyBucket.localDepth = combinedLocalDepth;
+        bucket.localDepth = combinedLocalDepth;
+        System.out.println("profundidade nova: " + combinedLocalDepth);
+
+
+
+//        // Remover o bucket irmão da memória
+//        directory.set(directory.indexOf(emptyBucket), null);
+
+        // Verificar se a profundidade global pode ser reduzida
+        boolean canReduceGlobalDepth = true;
+        for (HashBucket b : directory) {
+            if (b != null && b.localDepth == globalDepth) {
+                canReduceGlobalDepth = false;
+                break;
+            }
+        }
+        if (canReduceGlobalDepth) {
+            System.out.println("Reduzindo a profundidade global");
+            reduceGlobalDepth();
+        }
     }
+
+    public void reduceGlobalDepth(){
+        globalDepth--;
+        // Reduzir o tamanho do diretório pela metade
+        int size = directory.size();
+        for (int i = 0; i < (size / 2); i++) {
+            directory.removeLast();
+        }
+    }
+
 
 
     public void printDirectory() throws FileNotFoundException {

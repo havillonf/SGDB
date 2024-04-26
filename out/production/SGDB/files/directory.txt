@@ -1,9 +1,5 @@
-PG:3
+PG:2
 Bucket: (0) Index: 0, PL: 2
-Bucket: (1) Index: 101, PL: 3
+Bucket: (1) Index: 1, PL: 2
 Bucket: (2) Index: 10, PL: 2
 Bucket: (3) Index: 11, PL: 2
-Bucket: (4) Index: 0, PL: 2
-Bucket: (5) Index: 1, PL: 3
-Bucket: (6) Index: 10, PL: 2
-Bucket: (7) Index: 11, PL: 2

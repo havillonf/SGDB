@@ -113,4 +113,8 @@ class HashBucket {
             new PrintWriter(bucketFile).close(); // Clears the file by reopening and closing it without appending.
         }
     }
+
+    public boolean isEmpty(){
+        return readRecordsFromFile("buckets/" + bucketFile.getName()).isEmpty();
+    }
 }
